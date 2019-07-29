@@ -2,26 +2,10 @@ import React from 'react'
 import {Editor} from 'slate-react'
 import {Value} from 'slate'
 import {getFirestore} from '../lib/firebase'
-
-const initialValue = Value.fromJSON({
-  document: {
-    nodes: [
-      {
-        object: 'block',
-        type: 'paragraph',
-        nodes: [
-          {
-            object: 'text',
-            text: 'A line of text in a paragraph.',
-          },
-        ],
-      },
-    ],
-  },
-})
+import {useDebounce} from '../lib/utils'
 
 const saveToDB = async ({data, section}) => {
-  const db = await getFirestore()
+  const db = await getFirestore({mock: true})
   db.collection('journals')
     .doc('1')
     .update({[section]: data})
@@ -34,7 +18,7 @@ const saveToDB = async ({data, section}) => {
 }
 
 const load = async (id = 1) => {
-  const db = await getFirestore()
+  const db = await getFirestore({mock: true})
   const snapshot = await db
     .collection('journals')
     .doc(`${id}`)
@@ -73,11 +57,19 @@ const emptyValue = Value.fromJSON({
 })
 
 export default function () {
-  const [contentValue, setContentValue] = React.useState(initialValue)
+  const [contentValue, setContentValue] = React.useState(emptyValue)
   const [keyTakeawaysValue, setKeyTakeawaysValue] = React.useState(emptyValue)
+  const debounceSaveSummary = useDebounce(
+    () => saveToDB({section: 'SUMMARY', data: contentValue.toJSON()}),
+    800,
+  )
+  const debounceSaveKeyTakeaways = useDebounce(
+    () => saveToDB({section: 'KEY_TAKEAWAYS', data: keyTakeawaysValue.toJSON()}),
+    800,
+  )
 
   fetchDataAfterMounted({
-    onLoad: ({KEY_TAKEAWAYS, SUMMARY}) => {
+    onLoad: ({KEY_TAKEAWAYS, SUMMARY} = {}) => {
       setContentValue(Value.fromJSON(SUMMARY))
       setKeyTakeawaysValue(Value.fromJSON(KEY_TAKEAWAYS))
     },
@@ -85,13 +77,13 @@ export default function () {
 
   const onContentChange = ({value}) => {
     if (value.document !== contentValue.document) {
-      saveToDB({section: 'SUMMARY', data: value.toJSON()})
+      debounceSaveSummary()
     }
     setContentValue(value)
   }
   const onKeyTakeawaysChange = ({value}) => {
     if (value.document !== keyTakeawaysValue.document) {
-      saveToDB({section: 'KEY_TAKEAWAYS', data: value.toJSON()})
+      debounceSaveKeyTakeaways()
     }
     setKeyTakeawaysValue(value)
   }

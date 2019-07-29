@@ -19,7 +19,39 @@ export const getFirebase = async () => {
 }
 
 let firestoreInstance
-export const getFirestore = async () => {
+export const getFirestore = async ({mock} = {}) => {
+  if (mock) {
+    const emptyValue = {
+      document: {
+        nodes: [
+          {
+            object: 'block',
+            type: 'paragraph',
+            nodes: [
+              {
+                object: 'text',
+                text: 'From a mock data',
+              },
+            ],
+          },
+        ],
+      },
+    }
+    return {
+      collection: () => ({
+        doc: () => ({
+          update: async () => {},
+          get: () => ({
+            data: () => ({
+              KEY_TAKEAWAYS: emptyValue,
+              SUMMARY: emptyValue,
+            }),
+          }),
+        }),
+      }),
+    }
+  }
+
   if (firestoreInstance) return firestoreInstance
 
   const [firebase] = await Promise.all([
