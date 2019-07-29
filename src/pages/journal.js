@@ -1,7 +1,7 @@
 import React from 'react'
 import {Editor} from 'slate-react'
 import {Value} from 'slate'
-import {getDB} from '../lib/firebase'
+import {getFirestore} from '../lib/firebase'
 
 const initialValue = Value.fromJSON({
   document: {
@@ -20,30 +20,8 @@ const initialValue = Value.fromJSON({
   },
 })
 
-const fetchData = ({onLoad}) => {
-  const load = async (id = 1) => {
-    const db = await getDB()
-    const snapshot = await db
-      .collection('journals')
-      .doc(`${id}`)
-      .get()
-    return snapshot.data()
-  }
-
-  React.useEffect(() => {
-    async function fetch() {
-      const data = await load()
-      console.log('data', data)
-      if (data) {
-        onLoad(Value.fromJSON(data))
-      }
-    }
-    fetch()
-  }, [])
-}
-
 const save = async (data) => {
-  const db = await getDB()
+  const db = await getFirestore()
   db.collection('journals')
     .doc('1')
     .set(data)
@@ -55,9 +33,31 @@ const save = async (data) => {
     })
 }
 
+const load = async (id = 1) => {
+  const db = await getFirestore()
+  const snapshot = await db
+    .collection('journals')
+    .doc(`${id}`)
+    .get()
+  return snapshot.data()
+}
+
+const fetchDataAfterMounted = ({onLoad}) => {
+  React.useEffect(() => {
+    (async () => {
+      console.log('Fetching...')
+      const data = await load()
+      console.log('Fetched', data)
+      if (data) {
+        onLoad(Value.fromJSON(data))
+      }
+    })()
+  }, [])
+}
+
 export default function () {
   const [journalValue, setJournalValue] = React.useState(initialValue)
-  fetchData({onLoad: setJournalValue})
+  fetchDataAfterMounted({onLoad: setJournalValue})
   const onChange = ({value}) => {
     if (value.document !== journalValue.document) {
       save(value.toJSON())

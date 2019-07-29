@@ -18,9 +18,9 @@ export const getFirebase = async () => {
   return firebase
 }
 
-let db
-export const getDB = async () => {
-  if (db) return db
+let firestoreInstance
+export const getFirestore = async () => {
+  if (firestoreInstance) return firestoreInstance
 
   const [firebase] = await Promise.all([
     getFirebase(),
