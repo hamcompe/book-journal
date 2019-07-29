@@ -1,4 +1,7 @@
 {
   "extends": ["hamcompe"],
-  "rules": {}
+  "plugins": ["react-hooks"],
+  "rules": {
+    "consistent-return": "off"
+  }
 }
