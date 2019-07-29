@@ -20,11 +20,11 @@ const initialValue = Value.fromJSON({
   },
 })
 
-const save = async (data) => {
+const saveToDB = async ({data, section}) => {
   const db = await getFirestore()
   db.collection('journals')
     .doc('1')
-    .set(data)
+    .update({[section]: data})
     .then(() => {
       console.log('Document wrote')
     })
@@ -42,33 +42,71 @@ const load = async (id = 1) => {
   return snapshot.data()
 }
 
-const fetchDataAfterMounted = ({onLoad}) => {
+const fetchDataAfterMounted = ({onLoad = () => {}} = {}) => {
   React.useEffect(() => {
     (async () => {
       console.log('Fetching...')
       const data = await load()
       console.log('Fetched', data)
       if (data) {
-        onLoad(Value.fromJSON(data))
+        onLoad(data)
       }
     })()
   }, [])
 }
 
+const emptyValue = Value.fromJSON({
+  document: {
+    nodes: [
+      {
+        object: 'block',
+        type: 'paragraph',
+        nodes: [
+          {
+            object: 'text',
+            text: '',
+          },
+        ],
+      },
+    ],
+  },
+})
+
 export default function () {
-  const [journalValue, setJournalValue] = React.useState(initialValue)
-  fetchDataAfterMounted({onLoad: setJournalValue})
-  const onChange = ({value}) => {
-    if (value.document !== journalValue.document) {
-      save(value.toJSON())
-      setJournalValue(value)
+  const [contentValue, setContentValue] = React.useState(initialValue)
+  const [keyTakeawaysValue, setKeyTakeawaysValue] = React.useState(emptyValue)
+
+  fetchDataAfterMounted({
+    onLoad: ({KEY_TAKEAWAYS, SUMMARY}) => {
+      setContentValue(Value.fromJSON(SUMMARY))
+      setKeyTakeawaysValue(Value.fromJSON(KEY_TAKEAWAYS))
+    },
+  })
+
+  const onContentChange = ({value}) => {
+    if (value.document !== contentValue.document) {
+      saveToDB({section: 'SUMMARY', data: value.toJSON()})
     }
+    setContentValue(value)
+  }
+  const onKeyTakeawaysChange = ({value}) => {
+    if (value.document !== keyTakeawaysValue.document) {
+      saveToDB({section: 'KEY_TAKEAWAYS', data: value.toJSON()})
+    }
+    setKeyTakeawaysValue(value)
   }
 
   return (
     <div>
-      <h1>Hello Journal</h1>
-      <Editor value={journalValue} onChange={onChange} />
+      <h1>Title of the Book</h1>
+      <section>
+        <h2>Summary</h2>
+        <Editor value={contentValue} onChange={onContentChange} />
+      </section>
+      <section>
+        <h2>Key takeaways</h2>
+        <Editor value={keyTakeawaysValue} onChange={onKeyTakeawaysChange} />
+      </section>
     </div>
   )
 }
