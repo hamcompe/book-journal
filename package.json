@@ -13,10 +13,13 @@
     "gatsby-plugin-sharp": "^2.2.9",
     "gatsby-source-filesystem": "^2.1.6",
     "gatsby-transformer-sharp": "^2.2.4",
+    "immutable": "^4.0.0-rc.12",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-helmet": "^5.2.1"
+    "react-helmet": "^5.2.1",
+    "slate": "^0.47.4",
+    "slate-react": "^0.22.4"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.2",
@@ -57,12 +60,9 @@
     }
   },
   "lint-staged": {
-    "*.js": [
-      "eslint",
-      "jest --findRelatedTests"
-    ],
     "*.+(js|jsx|json|yml|yaml|css|less|scss|ts|tsx|md|graphql|mdx)": [
-      "prettier --write",
+      "prettier-eslint --write",
+      "jest --findRelatedTests --passWithNoTests",
       "git add"
     ]
   }
