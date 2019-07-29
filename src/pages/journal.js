@@ -1,11 +1,27 @@
 import React from 'react'
-import {Editor} from 'slate-react'
+import {Editor as SlateEditor} from 'slate-react'
 import {Value} from 'slate'
+import styled from '@emotion/styled'
+import {Global, css} from '@emotion/core'
 import {getFirestore} from '../lib/firebase'
 import {useDebounce} from '../lib/utils'
 
+const Layout = styled.div`
+  max-width: 800px;
+  margin: 0 auto;
+`
+const Editor = styled(SlateEditor)`
+  background: #fff;
+  padding: 1em;
+  margin: 1em -1em;
+  border-radius: 8px;
+  box-shadow: 0px 18px 15px -12px rgba(0, 0, 0, 0.03);
+`
+
+const USE_MOCK = false
+
 const saveToDB = async ({data, section}) => {
-  const db = await getFirestore({mock: true})
+  const db = await getFirestore({mock: USE_MOCK})
   db.collection('journals')
     .doc('1')
     .update({[section]: data})
@@ -18,7 +34,7 @@ const saveToDB = async ({data, section}) => {
 }
 
 const load = async (id = 1) => {
-  const db = await getFirestore({mock: true})
+  const db = await getFirestore({mock: USE_MOCK})
   const snapshot = await db
     .collection('journals')
     .doc(`${id}`)
@@ -89,7 +105,19 @@ export default function () {
   }
 
   return (
-    <div>
+    <Layout>
+      <Global
+        styles={css`
+          body {
+            background: #f9f9f9;
+          }
+          h1,
+          h2 {
+            margin-top: 1.2em;
+            margin-bottom: 0.3em;
+          }
+        `}
+      />
       <h1>Title of the Book</h1>
       <section>
         <h2>Summary</h2>
@@ -99,6 +127,6 @@ export default function () {
         <h2>Key takeaways</h2>
         <Editor value={keyTakeawaysValue} onChange={onKeyTakeawaysChange} />
       </section>
-    </div>
+    </Layout>
   )
 }

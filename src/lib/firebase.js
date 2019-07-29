@@ -60,3 +60,12 @@ export const getFirestore = async ({mock} = {}) => {
   ])
   return firebase.firestore()
 }
+
+let storage
+export const getStorage = async () => {
+  if (storage) return storage
+
+  const firebase = await getFirebase()
+  storage = firebase.storage()
+  return storage
+}

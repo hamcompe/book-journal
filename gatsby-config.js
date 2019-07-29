@@ -8,6 +8,7 @@ module.exports = {
     author: '@gatsbyjs',
   },
   plugins: [
+    'gatsby-plugin-emotion',
     'gatsby-plugin-lodash',
     'gatsby-plugin-react-helmet',
     {
