@@ -8,6 +8,12 @@ import {useDebounce} from '../lib/utils'
 
 const USE_MOCK = false
 
+enum JournalContentType {
+  Summary = 'SUMMARY',
+  Title = 'TITLE',
+  KeyTakeaways = 'KEY_TAKEAWAYS'
+}
+
 const TitleEditable = styled.input`
   font-size: 2.25rem;
   margin-top: 2rem;
@@ -46,7 +52,7 @@ const Editor = styled(SlateEditor)`
   `};
 `
 
-const saveToDB = async ({data, section}) => {
+const saveToDB = async ({data, section }: { data: any; section: JournalContentType }) => {
   const db = await getFirestore({mock: USE_MOCK})
   db.collection('journals')
     .doc('1')
@@ -59,7 +65,12 @@ const saveToDB = async ({data, section}) => {
     })
 }
 
-const load = async (id = 1) => {
+type DatabaseResult = {
+  [JournalContentType.KeyTakeaways]: any;
+  [JournalContentType.Summary]: any;
+  [JournalContentType.Title]: string;
+}
+const load = async(id: number = 1): Promise<DatabaseResult> => {
   const db = await getFirestore({mock: USE_MOCK})
   const snapshot = await db
     .collection('journals')
@@ -68,7 +79,7 @@ const load = async (id = 1) => {
   return snapshot.data()
 }
 
-const fetchDataAfterMounted = ({onLoad = () => {}} = {}) => {
+const fetchDataAfterMounted = ({onLoad}: { onLoad: (DatabaseResult) => any }) => {
   React.useEffect(() => {
     (async () => {
       console.log('Fetching...')
@@ -104,20 +115,20 @@ export default function () {
   const [cover, setCover] = React.useState('')
 
   const debounceSaveSummary = useDebounce(
-    () => saveToDB({section: 'SUMMARY', data: contentValue.toJSON()}),
+    () => saveToDB({section: JournalContentType.Summary, data: contentValue.toJSON()}),
     800,
   )
   const debounceSaveKeyTakeaways = useDebounce(
-    () => saveToDB({section: 'KEY_TAKEAWAYS', data: keyTakeawaysValue.toJSON()}),
+    () => saveToDB({section: JournalContentType.KeyTakeaways, data: keyTakeawaysValue.toJSON()}),
     800,
   )
   const debounceSaveTitle = useDebounce(
-    () => saveToDB({section: 'TITLE', data: cover}),
+    () => saveToDB({section: JournalContentType.Title, data: cover}),
     800,
   )
 
   fetchDataAfterMounted({
-    onLoad: ({KEY_TAKEAWAYS, SUMMARY, TITLE} = {}) => {
+    onLoad: ({KEY_TAKEAWAYS, SUMMARY, TITLE}: DatabaseResult) => {
       if (TITLE) {
         setCover(TITLE)
       }
